@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор VK токенов</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .scope-group { margin: 15px 0; }
+        label { display: inline-block; margin: 5px 15px 5px 0; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #result { margin-top: 20px; }
+        textarea { width: 100%; padding: 10px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Генератор VK токенов</h1>
+
+    <div class="scope-group">
+        <h3>Выберите права доступа:</h3>
+        <label><input type="checkbox" class="scope" value="offline" checked> Offline (бессрочный токен)</label>
+        <label><input type="checkbox" class="scope" value="wall"> Доступ к стене</label>
+        <label><input type="checkbox" class="scope" value="photos"> Доступ к фото</label>
+        <label><input type="checkbox" class="scope" value="groups"> Доступ к группам</label>
+        <label><input type="checkbox" class="scope" value="friends"> Доступ к друзьям</label>
+        <label><input type="checkbox" class="scope" value="messages"> Доступ к сообщениям</label>
+        <label><input type="checkbox" class="scope" value="docs"> Доступ к документам</label>
+    </div>
+
+    <button id="getTokenBtn">Получить токен</button>
+
+    <div id="result"></div>
+
+    <script>
+        // ВСТАВЬ СВОЙ ID ПРИЛОЖЕНИЯ ЗДЕСЬ!
+        const CLIENT_ID = '54605489';  // ← Замени на свой ID из шага 1
+
+        const SCOPES = {
+            'offline': 'offline',
+            'wall': 'wall',
+            'photos': 'photos',
+            'groups': 'groups',
+            'friends': 'friends',
+            'messages': 'messages',
+            'docs': 'docs'
+        };
+
+        document.getElementById('getTokenBtn').addEventListener('click', function() {
+            // Собираем выбранные права
+            let selectedScopes = [];
+            document.querySelectorAll('.scope:checked').forEach(function(checkbox) {
+                selectedScopes.push(checkbox.value);
+            });
+
+            if (selectedScopes.length === 0) {
+                alert('Выберите хотя бы одно право доступа');
+                return;
+            }
+
+            // Формируем URL для авторизации
+            // redirect_uri = blank.html — это стандартная страница VK
+            const redirectUri = 'https://oauth.vk.com/blank.html';
+            const scopeString = selectedScopes.join(',');
+
+            const vkAuthUrl = `https://oauth.vk.com/authorize?` +
+                `client_id=${CLIENT_ID}` +
+                `&display=page` +
+                `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+                `&scope=${scopeString}` +
+                `&response_type=token` +
+                `&v=5.131`;
+
+            // Отправляем пользователя на страницу авторизации VK
+            window.location.href = vkAuthUrl;
+        });
+
+        // Функция для извлечения параметров из URL после #
+        function getHashParams() {
+            const hashParams = {};
+            const hash = window.location.hash.substring(1);
+            if (!hash) return hashParams;
+
+            const pairs = hash.split('&');
+            for (let i = 0; i < pairs.length; i++) {
+                const pair = pairs[i].split('=');
+                hashParams[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return hashParams;
+        }
+
+        // При загрузке страницы проверяем, вернулись ли мы с токеном
+        window.onload = function() {
+            const params = getHashParams();
+
+            if (params.access_token) {
+                // Токен получен! Отображаем его
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h3>✅ Токен успешно получен!</h3>
+                    <p><strong>Ваш access_token:</strong></p>
+                    <textarea rows="3" readonly>${params.access_token}</textarea>
+                    <p><strong>Важно!</strong> Никому не показывайте этот токен. Он дает доступ к вашему аккаунту.</p>
+                    <p><small>Срок действия: ${params.expires_in === '0' ? 'бессрочный' : params.expires_in + ' секунд'}</small></p>
+                    <p><small>ID пользователя: ${params.user_id}</small></p>
+                    <button onclick="location.href='/'">Получить новый токен</button>
+                `;
+
+                // Чистим URL от токена (чтобы никто не увидел в истории)
+                window.history.replaceState({}, document.title, '/');
+            }
+        };
+    </script>
+</body>
+</html>
