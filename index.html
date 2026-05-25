@@ -1,160 +1,47 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Генератор VK токенов</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #f5f7fa;
-        }
-        .container {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-        .permissions {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        .permissions ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        .permissions li {
-            margin: 8px 0;
-            color: #2c3e50;
-        }
-        button {
-            background: #4a76a8;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover {
-            background: #3b5d86;
-        }
-        #result {
-            margin-top: 20px;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            resize: vertical;
-        }
-        .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-        .success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 12px;
-            margin-top: 15px;
-        }
-        code {
-            background: #e9ecef;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔑 Генератор VK токена</h1>
-        
-        <button id="getTokenBtn">🔓 Получить токен</button>
-        
-        <div id="result"></div>
-    </div>
+<div>
+  <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+  <script type="text/javascript">
+    if ('VKIDSDK' in window) {
+      const VKID = window.VKIDSDK;
 
-    <script>
-        // ⚠️ ВСТАВЬ СВОЙ ID ПРИЛОЖЕНИЯ!
-        const CLIENT_ID = '54605489';  // ← ЗАМЕНИ НА СВОЙ!
+      VKID.Config.init({
+        app: 54609396,
+        redirectUrl: 'https://apocryph01.github.io/',
+        responseMode: VKID.ConfigResponseMode.Callback,
+        scope: 'wall,friends,groups'
+      });
+
+      const oneTap = new VKID.OneTap();
+
+      oneTap.render({
+        container: document.currentScript.parentElement,
+        showAlternativeLogin: true
+      })
+      .on(VKID.WidgetEvents.ERROR, vkidOnError)
+      .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+        // После успешного входа просто показываем код
+        const code = payload.code;
         
-        // Правильные названия прав VK API
-        const REQUIRED_SCOPES = ['offline', 'messages', 'wall', 'groups'];
-        const SCOPE_STRING = REQUIRED_SCOPES.join(',');
-        
-        document.getElementById('getTokenBtn').addEventListener('click', function() {
-            const redirectUri = 'https://oauth.vk.com/blank.html';
-            
-            const vkAuthUrl = 'https://oauth.vk.com/authorize?' + 
-                'client_id=' + CLIENT_ID +
-                '&display=page' +
-                '&redirect_uri=' + encodeURIComponent(redirectUri) +
-                '&scope=' + SCOPE_STRING +
-                '&response_type=token' +
-                '&v=5.199';  // Используем актуальную версию API
-            
-            console.log('Открываем URL:', vkAuthUrl);
-            window.location.href = vkAuthUrl;
-        });
-        
-        // Функция для извлечения параметров из URL после #
-        function getHashParams() {
-            const hashParams = {};
-            const hash = window.location.hash.substring(1);
-            if (!hash) return hashParams;
-            
-            const pairs = hash.split('&');
-            for (let i = 0; i < pairs.length; i++) {
-                const pair = pairs[i].split('=');
-                hashParams[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-            }
-            return hashParams;
-        }
-        
-        // Проверяем, не вернулись ли мы с токеном
-        window.onload = function() {
-            const params = getHashParams();
-            
-            if (params.access_token) {
-                const expiresText = params.expires_in === '0' ? 'бессрочный' : Math.floor(params.expires_in / 3600) + ' часов';
-                
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `
-                    <div class="success">
-                        <strong>✅ Токен успешно получен!</strong>
-                    </div>
-                    <textarea rows="4" readonly>${params.access_token}</textarea>
-                    <div class="warning">
-                        <strong>⚠️ Важно!</strong><br>
-                        • Этот токен дает полный доступ к вашему аккаунту.<br>
-                        • <strong>Никому не показывайте</strong> этот токен.<br>
-                        • Храните его в надежном месте.<br>
-                        • Срок действия: <strong>${expiresText}</strong><br>
-                        • ID пользователя: <strong>${params.user_id || 'не определен'}</strong>
-                    </div>
-                    <button onclick="location.href='/'" style="margin-top: 15px; background: #6c757d;">🔄 Получить новый токен</button>
-                `;
-                
-                // Убираем токен из адресной строки
-                window.history.replaceState({}, document.title, '/');
-            }
-        };
-    </script>
-</body>
-</html>
+        // Показываем пользователю его код для обмена на токен
+        document.getElementById('result').innerHTML = `
+          <div style="margin-top: 20px; padding: 10px; background: #f0f0f0;">
+            <p>✅ Вход выполнен! Ваш код для получения токена:</p>
+            <code style="display: block; word-break: break-all; background: white; padding: 10px;">${code}</code>
+            <p>Обменяйте этот код на токен через:<br/>
+            <code>https://oauth.vk.com/access_token?client_id=54609396&client_secret=ВАШ_КЛЮЧ&code=${code}&redirect_uri=https://apocryph01.github.io/</code></p>
+          </div>
+        `;
+      })
+      .on(VKID.WidgetEvents.ERROR, vkidOnError);
+
+      function vkidOnSuccess(data) {
+        document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      }
+
+      function vkidOnError(error) {
+        document.getElementById('result').innerHTML = '<div style="color: red;">Ошибка: ' + JSON.stringify(error) + '</div>';
+      }
+    }
+  </script>
+  <div id="result"></div>
+</div>
