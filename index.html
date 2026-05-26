@@ -330,13 +330,16 @@
     // Redirect URI - используем blank.html, который разрешён для всех приложений VK
     const REDIRECT_URI = 'https://oauth.vk.com/blank.html';
     
+    // Хранилище для состояния авторизации
+    let authTab = null;
+    let messageListener = null;
+    
     function showError(text) {
         const errDiv = document.getElementById('error_msg');
         errDiv.innerText = '❌ Ошибка: ' + text;
         errDiv.style.display = 'block';
         const resultDiv = document.getElementById('result');
         if (resultDiv) resultDiv.style.display = 'none';
-        // Возвращаем кнопку
         renderButton();
     }
     
@@ -366,7 +369,7 @@
             container.innerHTML = `
                 <div class="loading-container">
                     <div class="loading-spinner"></div>
-                    <div class="loading-text">⏳ Перенаправление на страницу авторизации VK...</div>
+                    <div class="loading-text">⏳ Открываем страницу авторизации VK...</div>
                 </div>
             `;
         }
@@ -421,14 +424,9 @@
         }
         document.body.removeChild(textarea);
     }
-
-    // Проверяем, вернулись ли мы с авторизации (на blank.html)
-    // Для этого используем window.open и следим за редиректом
-    let authWindow = null;
-    let checkInterval = null;
     
     function startAuth() {
-        // Генерируем случайный state для защиты
+        // Генерируем уникальный state
         const state = Math.random().toString(36).substring(2, 15);
         sessionStorage.setItem('vk_auth_state', state);
         
@@ -442,98 +440,81 @@
             `&v=5.199` +
             `&state=${state}`;
         
-        // Показываем индикатор
         showLoading();
         
-        // Открываем окно авторизации (небольшое всплывающее окно)
-        const width = 700;
-        const height = 550;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
+        // Открываем новую вкладку
+        authTab = window.open(authUrl, '_blank');
         
-        authWindow = window.open(authUrl, 'VKAuth', `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`);
-        
-        if (!authWindow) {
-            showError('Не удалось открыть окно авторизации. Разрешите всплывающие окна для этого сайта.');
+        if (!authTab) {
+            showError('Не удалось открыть вкладку. Разрешите всплывающие окна для этого сайта.');
             renderButton();
             return;
         }
         
-        // Следим за редиректом окна
-        checkInterval = setInterval(() => {
-            try {
-                if (authWindow.closed) {
-                    // Окно закрыто пользователем
-                    clearInterval(checkInterval);
-                    if (!document.getElementById('access_token')?.innerText) {
-                        showError('Авторизация отменена пользователем');
-                        renderButton();
-                    }
-                    return;
-                }
-                
-                let currentUrl;
-                try {
-                    currentUrl = authWindow.location.href;
-                } catch (e) {
-                    // Cross-origin — окно ещё на vk.com
-                    return;
-                }
-                
-                // Проверяем, пришёл ли редирект на blank.html с токеном
-                if (currentUrl && currentUrl.startsWith(REDIRECT_URI)) {
-                    clearInterval(checkInterval);
-                    
-                    // Извлекаем токен из URL
-                    const hash = currentUrl.split('#')[1];
-                    if (hash) {
-                        const hashParams = new URLSearchParams(hash);
-                        const accessToken = hashParams.get('access_token');
-                        const stateBack = hashParams.get('state');
-                        const savedState = sessionStorage.getItem('vk_auth_state');
-                        
-                        if (accessToken && stateBack === savedState) {
-                            showToken(accessToken);
-                            authWindow.close();
-                            sessionStorage.removeItem('vk_auth_state');
-                            renderButton();
-                        } else {
-                            const error = hashParams.get('error');
-                            const errorDesc = hashParams.get('error_description');
-                            showError(errorDesc || error || 'Не удалось получить токен');
-                            authWindow.close();
-                            renderButton();
-                        }
-                    } else {
-                        // Возможно ошибка в параметрах
-                        const urlParams = new URLSearchParams(currentUrl.split('?')[1]);
-                        const error = urlParams.get('error');
-                        const errorDesc = urlParams.get('error_description');
-                        if (error) {
-                            showError(errorDesc || error);
-                        } else {
-                            showError('Не удалось получить токен');
-                        }
-                        authWindow.close();
-                        renderButton();
-                    }
-                }
-            } catch (e) {
-                // Игнорируем
-            }
-        }, 200);
-        
-        // Таймаут на случай зависания
-        setTimeout(() => {
-            if (authWindow && !authWindow.closed && checkInterval) {
+        // Устанавливаем слушатель сообщений от вкладки (через postMessage нельзя из-за политики безопасности)
+        // Поэтому используем проверку через интервал с проверкой closed
+        const checkInterval = setInterval(() => {
+            if (authTab.closed) {
                 clearInterval(checkInterval);
-                authWindow.close();
-                if (!document.getElementById('access_token')?.innerText) {
+                // Вкладка закрыта, проверяем, получили ли мы токен
+                const savedState = sessionStorage.getItem('vk_auth_state');
+                if (savedState) {
+                    // Токен не был получен
+                    showError('Авторизация отменена или вкладка закрыта');
+                    renderButton();
+                    sessionStorage.removeItem('vk_auth_state');
+                }
+            }
+        }, 500);
+        
+        // Таймаут на случай, если вкладка зависла
+        setTimeout(() => {
+            if (authTab && !authTab.closed && checkInterval) {
+                clearInterval(checkInterval);
+                authTab.close();
+                if (sessionStorage.getItem('vk_auth_state')) {
                     showError('Время ожидания авторизации истекло');
                     renderButton();
+                    sessionStorage.removeItem('vk_auth_state');
                 }
             }
         }, 180000);
+    }
+    
+    // Слушаем сообщения от сервера (через BroadcastChannel для обмена между вкладками)
+    function initBroadcastChannel() {
+        // Создаём канал для обмена сообщениями между вкладками
+        const channel = new BroadcastChannel('vk_token_channel');
+        
+        channel.onmessage = (event) => {
+            if (event.data && event.data.type === 'TOKEN_RECEIVED' && event.data.token) {
+                // Получили токен из другой вкладки
+                showToken(event.data.token);
+                sessionStorage.removeItem('vk_auth_state');
+                renderButton();
+                channel.close();
+            }
+        };
+    }
+    
+    // Проверяем, не перешли ли мы на страницу с токеном (если основное окно было перенаправлено)
+    function checkCurrentWindowToken() {
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+            const hashParams = new URLSearchParams(hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const state = hashParams.get('state');
+            const savedState = sessionStorage.getItem('vk_auth_state');
+            
+            if (accessToken && state === savedState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showToken(accessToken);
+                sessionStorage.removeItem('vk_auth_state');
+                renderButton();
+                return true;
+            }
+        }
+        return false;
     }
     
     function renderButton() {
@@ -558,12 +539,15 @@
         }
     }
     
-    // Инициализация страницы
+    // Инициализация
     function init() {
-        renderButton();
+        initBroadcastChannel();
+        const hasToken = checkCurrentWindowToken();
+        if (!hasToken) {
+            renderButton();
+        }
     }
     
-    // Запускаем инициализацию после загрузки DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
