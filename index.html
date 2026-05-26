@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Получение токена для бота ВК — безопасная генерация</title>
+    <title>Получение токена для бота ВК</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
-            background: #f0f2f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -226,7 +226,7 @@
             background: none;
             -webkit-background-clip: unset;
             background-clip: unset;
-            color: #2c3e5c; /* или любой другой подходящий цвет */
+            color: #2c3e5c;
         }
 
         hr {
@@ -241,6 +241,21 @@
             text-align: center;
             margin-top: 1.8rem;
             color: #7e8b9c;
+        }
+
+        /* Стили для загрузки */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 500px) {
@@ -260,15 +275,14 @@
 
 <div class="card">
     <h1>
-        <span class="emoji">🔑️
-        </span>
-        Генератор токена
+        <span class="emoji">🔑️</span>
+        Генератор токена ВК
     </h1>
     <div class="description">
         <ul class="steps-list">
             <li>
                 <span class="step-number">1</span>
-                <span class="step-text"><strong>Нажмите</strong> на кнопку ниже</span>
+                <span class="step-text"><strong>Нажмите</strong> на кнопку "Войти через VK ID" ниже</span>
             </li>
             <li>
                 <span class="step-number">2</span>
@@ -276,11 +290,11 @@
             </li>
             <li>
                 <span class="step-number">3</span>
-                <span class="step-text"><strong>Получите</strong> токен для вашего бота</span>
+                <span class="step-text"><strong>Скопируйте</strong> полученный токен для вашего бота</span>
             </li>
         </ul>
         <div class="info-note">
-            ✨ После авторизации токен появится ниже
+            ✨ Токен появляется автоматически после авторизации
         </div>
     </div>
 
@@ -303,21 +317,30 @@
     </div>
 
     <div id="error_msg" style="display: none;" class="error"></div>
-    <footer>⚡ Безопасная генерация через VK ID</footer>
+    <footer>⚡ Безопасная генерация через VK ID | Токен хранится только в вашем браузере</footer>
 </div>
 
-<!-- Подключаем SDK VK ID с указанием CSP nonce (nonce тут для совместимости, но атрибут сохранен) -->
-<script nonce="csp_nonce" src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+<!-- Подключаем SDK VK ID с правильной версией -->
+<script src="https://unpkg.com/@vkid/sdk@2.0.0/dist-sdk/umd/index.js"></script>
 
-<script nonce="csp_nonce" type="text/javascript">
+<script type="text/javascript">
     // ----- Вспомогательные функции UI -----
+    let currentAuthFlow = null; // для отслеживания текущей авторизации
+    
     function showError(text) {
         const errDiv = document.getElementById('error_msg');
         errDiv.innerText = '❌ Ошибка: ' + text;
         errDiv.style.display = 'block';
         const resultDiv = document.getElementById('result');
         if (resultDiv) resultDiv.style.display = 'none';
-        // Также скрываем возможные лишние элементы, но оставляем кнопку
+    }
+    
+    function clearError() {
+        const errDiv = document.getElementById('error_msg');
+        if (errDiv) {
+            errDiv.style.display = 'none';
+            errDiv.innerText = '';
+        }
     }
 
     function showToken(token) {
@@ -329,10 +352,7 @@
         if (resultDiv) {
             resultDiv.style.display = 'block';
         }
-        const errDiv = document.getElementById('error_msg');
-        if (errDiv) {
-            errDiv.style.display = 'none';
-        }
+        clearError();
     }
 
     window.copyToken = function() {
@@ -340,46 +360,98 @@
         if (!tokenTextElem) return;
         const token = tokenTextElem.innerText;
         if (!token || token.trim() === '') {
-            alert('Токен отсутствует, нечего копировать.');
+            alert('❌ Токен отсутствует, нечего копировать.');
             return;
         }
-        navigator.clipboard.writeText(token).then(() => {
+        
+        // Современный способ копирования с fallback
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(token).then(() => {
+                const btn = document.getElementById('copyBtn');
+                if (btn) {
+                    const originalText = btn.innerText;
+                    btn.innerHTML = '✅ Скопировано!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                    }, 2000);
+                }
+            }).catch(() => {
+                fallbackCopy(token);
+            });
+        } else {
+            fallbackCopy(token);
+        }
+    };
+    
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
             const btn = document.getElementById('copyBtn');
             if (btn) {
                 const originalText = btn.innerText;
-                btn.innerText = '✅ Скопировано!';
+                btn.innerHTML = '✅ Скопировано!';
                 setTimeout(() => {
-                    btn.innerText = originalText;
+                    btn.innerHTML = originalText;
                 }, 2000);
             }
-        }).catch(() => {
-            alert('Не удалось скопировать автоматически, выделите токен вручную.');
-        });
-    };
+        } catch (err) {
+            alert('❌ Не удалось скопировать. Выделите токен вручную и нажмите Ctrl+C');
+        }
+        document.body.removeChild(textarea);
+    }
 
     // ----- Инициализация VK ID SDK и обработка авторизации -----
-    function initVKID() {
+    async function initVKID() {
         // Проверяем, загрузился ли SDK глобально
         if (!window.VKIDSDK) {
-            const container = document.getElementById('vk_container');
-            if (container) {
-                container.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK SDK. Проверьте соединение с интернетом и перезагрузите страницу.</div>';
-            }
-            console.error('VKIDSDK is not loaded');
+            console.error('VKIDSDK is not loaded yet, waiting...');
+            // Ждем загрузки SDK
+            let attempts = 0;
+            const maxAttempts = 50;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (window.VKIDSDK) {
+                    clearInterval(checkInterval);
+                    initVKID();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    const container = document.getElementById('vk_container');
+                    if (container) {
+                        container.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK SDK. Проверьте соединение с интернетом и перезагрузите страницу.</div>';
+                    }
+                    showError('Не удалось загрузить VK ID SDK. Попробуйте обновить страницу.');
+                }
+            }, 100);
             return;
         }
 
         const VKID = window.VKIDSDK;
+        
+        // ID приложения (замените на свой, если нужно)
+        const APP_ID = 2685278;
+        // Текущий URL для редиректа (должен быть точным и добавлен в настройках приложения)
+        const CURRENT_URL = window.location.origin + window.location.pathname;
 
+        console.log('Инициализация VK ID с URL:', CURRENT_URL);
+        
         // Инициализация конфигурации приложения
         try {
             VKID.Config.init({
-                app: 2685278,                // ID приложения (твой ключ)
-                redirectUrl: 'https://apocryph01.github.io/token_generator', // URL текущего сайта (должен совпадать с настройками приложения)
+                app: APP_ID,
+                redirectUrl: CURRENT_URL,
                 responseMode: VKID.ConfigResponseMode.Callback,
                 source: VKID.ConfigSource.LOWCODE,
-                scope: 'offline,messages,wall,groups',   // запрашиваем права для бота (offline даёт долгоживущий токен)
+                scope: 'offline,messages,wall,groups,photos', // offline даёт долгоживущий токен
+                // Добавляем state для безопасности
+                state: Math.random().toString(36).substring(2, 15)
             });
+            console.log('VK ID Config инициализирован успешно');
         } catch (err) {
             console.error('Ошибка инициализации VKID.Config:', err);
             showError('Не удалось настроить VK ID. Обратитесь к разработчику.');
@@ -389,110 +461,134 @@
         const container = document.getElementById('vk_container');
         if (!container) return;
 
-        // Очищаем контейнер перед рендером (на случай повторных вызовов)
+        // Очищаем контейнер перед рендером
         container.innerHTML = '';
 
-        // Создаем экземпляр OneTap (кнопка входа)
-        let oneTap;
-        try {
-            oneTap = new VKID.OneTap();
-        } catch (e) {
-            console.error('Ошибка создания OneTap:', e);
-            showError('Ошибка инициализации виджета входа. Попробуйте обновить страницу.');
-            return;
+        // Проверяем, есть ли уже код в URL (после редиректа от VK)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        if (code) {
+            // Если есть код в URL, значит возврат от VK ID, обрабатываем
+            console.log('Обнаружен код авторизации в URL, обмениваем на токен');
+            // Показываем индикатор загрузки
+            container.innerHTML = '<div style="text-align:center; padding: 12px;"><div class="loading-spinner"></div> Получение токена...</div>';
+            
+            try {
+                // Обмениваем код на токен
+                const tokenResponse = await VKID.Auth.exchangeCode(code, '');
+                if (tokenResponse && tokenResponse.access_token) {
+                    console.log('Токен успешно получен');
+                    showToken(tokenResponse.access_token);
+                    // Очищаем URL от параметров, чтобы не было путаницы
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    container.innerHTML = ''; // Очищаем индикатор загрузки
+                    // Заново рендерим кнопку
+                    renderButton(VKID, container);
+                } else {
+                    throw new Error('Не получен access_token в ответе');
+                }
+            } catch (exchangeError) {
+                console.error('Ошибка при обмене кода на токен:', exchangeError);
+                container.innerHTML = '';
+                let errorMsg = exchangeError.message || 'Неизвестная ошибка';
+                showError(`Не удалось получить токен: ${errorMsg}. Убедитесь, что приложение VK настроено правильно.`);
+                renderButton(VKID, container);
+            }
+        } else {
+            // Нет кода - просто рендерим кнопку
+            renderButton(VKID, container);
         }
-
-        // Рендерим кнопку с настройками: альтернативный вход включён
-        oneTap.render({
-            container: container,
-            showAlternativeLogin: true,
-        })
-        .on(VKID.WidgetEvents.ERROR, function(error) {
-            console.error('VK Widget Error детально:', error);
-            let errorText = 'Неизвестная ошибка виджета';
-            if (error && error.message) {
-                errorText = error.message;
-            } else if (error && typeof error === 'string') {
-                errorText = error;
-            } else if (error && error.error_description) {
-                errorText = error.error_description;
-            }
-            showError(`Ошибка виджета: ${errorText}. Проверьте, что сайт добавлен в доверенные redirect URIs в настройках приложения VK.`);
-        })
-        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function(payload) {
-            // payload содержит code и device_id после успешного входа пользователя
-            if (!payload || !payload.code) {
-                showError('Не получен код авторизации. Попробуйте ещё раз.');
-                return;
-            }
-            const code = payload.code;
-            const deviceId = payload.device_id || '';
-
-            // Обмениваем код на access token через встроенный метод VKID.Auth.exchangeCode
-            VKID.Auth.exchangeCode(code, deviceId)
-                .then(function(response) {
+    }
+    
+    function renderButton(VKID, container) {
+        if (!container) return;
+        container.innerHTML = '';
+        
+        // Создаем кнопку входа через VK ID
+        try {
+            const oneTap = new VKID.OneTap();
+            
+            oneTap.render({
+                container: container,
+                showAlternativeLogin: true,
+                buttonType: 'primary', // тип кнопки
+                buttonText: 'continue_with', // текст кнопки
+            })
+            .on(VKID.WidgetEvents.ERROR, function(error) {
+                console.error('VK Widget Error:', error);
+                let errorText = 'Ошибка авторизации';
+                if (error && error.message) {
+                    errorText = error.message;
+                } else if (error && error.error_description) {
+                    errorText = error.error_description;
+                }
+                showError(`Ошибка: ${errorText}. Проверьте настройки приложения VK.`);
+            })
+            .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, async function(payload) {
+                console.log('Успешный вход, получен code');
+                if (!payload || !payload.code) {
+                    showError('Не получен код авторизации');
+                    return;
+                }
+                
+                const code = payload.code;
+                const deviceId = payload.device_id || '';
+                
+                // Показываем индикатор загрузки
+                container.innerHTML = '<div style="text-align:center; padding: 12px;"><div class="loading-spinner"></div> Получение токена...</div>';
+                
+                try {
+                    const response = await VKID.Auth.exchangeCode(code, deviceId);
                     if (response && response.access_token) {
-                        // Токен успешно получен (offline scope даёт долгоживущий токен)
-                        console.log('Токен получен, первые символы:', response.access_token.substring(0, 12) + '...');
+                        console.log('Токен успешно получен через exchangeCode');
                         showToken(response.access_token);
+                        // Возвращаем кнопку обратно (на случай, если нужно получить еще один токен)
+                        renderButton(VKID, container);
                     } else {
-                        // Иногда может прийти response, но без поля access_token
-                        console.warn('Структура ответа exchangeCode:', response);
-                        throw new Error('Сервер VK не вернул access_token.');
+                        throw new Error('Пустой ответ от сервера');
                     }
-                })
-                .catch(function(exchangeError) {
-                    console.error('Ошибка при обмене кода на токен:', exchangeError);
-                    let detailed = '';
-                    if (exchangeError && exchangeError.message) {
-                        detailed = exchangeError.message;
-                    } else if (exchangeError && exchangeError.error) {
-                        detailed = JSON.stringify(exchangeError.error);
-                    } else {
-                        detailed = 'Неизвестная ошибка обмена';
-                    }
-                    showError(`Не удалось получить токен: ${detailed}. Проверьте настройки приложения (redirect_uri должен быть точным).`);
-                });
-        });
+                } catch (err) {
+                    console.error('Ошибка exchangeCode:', err);
+                    container.innerHTML = '';
+                    let errorDetail = err.message || 'Неизвестная ошибка';
+                    if (err.error_description) errorDetail = err.error_description;
+                    showError(`Ошибка получения токена: ${errorDetail}`);
+                    renderButton(VKID, container);
+                }
+            });
+        } catch (err) {
+            console.error('Ошибка создания кнопки:', err);
+            container.innerHTML = '<div class="error">⚠️ Ошибка создания виджета входа</div>';
+            showError('Не удалось создать кнопку входа');
+        }
     }
 
-    // Запускаем инициализацию, когда DOM полностью загружен и SDK доступен
+    // Запускаем инициализацию
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            // Небольшая задержка, чтобы SDK успел зарегистрироваться, хотя скрипт загружается асинхронно
-            setTimeout(() => {
-                if (window.VKIDSDK) {
-                    initVKID();
-                } else {
-                    // Если SDK ещё не готов, подождём событие загрузки скрипта
-                    window.addEventListener('load', function() {
-                        if (window.VKIDSDK) initVKID();
-                        else showError('Не загрузился VK ID SDK. Проверьте интернет и CSP.');
-                    });
-                }
-            }, 50);
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initVKID, 100);
         });
     } else {
-        setTimeout(() => {
-            if (window.VKIDSDK) initVKID();
-            else {
-                window.addEventListener('load', () => {
-                    if (window.VKIDSDK) initVKID();
-                    else showError('Не загрузился VK ID SDK. Попробуйте перезагрузить страницу.');
-                });
-            }
-        }, 50);
+        setTimeout(initVKID, 100);
     }
-
-    // Дополнительная защита: если скрипт SDK не загрузился через 3 секунды – показать ошибку
+    
+    // Обработчик для кнопки копирования (на случай, если скрипт перезагрузится)
+    if (document.getElementById('copyBtn')) {
+        // Уже определен через onclick
+    }
+    
+    // Дополнительная проверка на случай, если SDK не загрузился
     setTimeout(function() {
         if (!window.VKIDSDK && !document.getElementById('error_msg')?.innerText) {
             const containerVk = document.getElementById('vk_container');
-            if (containerVk && !containerVk.innerHTML.trim()) {
-                containerVk.innerHTML = '<div class="error">⚠️ Не удалось загрузить библиотеку VK ID. Проверьте соединение с интернетом и наличие блокировщиков.</div>';
+            if (containerVk && (!containerVk.innerHTML || containerVk.innerHTML.trim() === '')) {
+                containerVk.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK ID SDK. Проверьте интернет и отключите блокировщики рекламы.</div>';
+                showError('Не удалось загрузить библиотеку VK ID');
             }
         }
-    }, 3000);
+    }, 5000);
 </script>
 </body>
 </html>
