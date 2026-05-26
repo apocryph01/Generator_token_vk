@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Получение токена для бота ВК</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #1e1e2a;
+        }
+        .description {
+            color: #6c757d;
+            margin-bottom: 32px;
+            font-size: 0.95rem;
+        }
+        .token-area {
+            margin-top: 24px;
+            text-align: left;
+            border-top: 1px solid #e9ecef;
+            padding-top: 24px;
+        }
+        .token-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: #2c3e50;
+        }
+        .token-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 12px 16px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #212529;
+            margin-bottom: 16px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        button {
+            background: #2787f5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        button:hover {
+            background: #1c6dc9;
+        }
+        .error {
+            color: #dc3545;
+            background: #ffe6e6;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .info {
+            background: #e7f5ff;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #0a58ca;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🔑 Токен для бота 1</h1>
+    <div class="description">
+        Нажмите на кнопку ниже, войдите в аккаунт ВКонтакте и разрешите доступ.<br>
+        После этого вы получите токен, который нужно отправить мне.
+    </div>
+
+    <!-- Сюда VK ID вставит кнопку входа -->
+    <div id="vk_container"></div>
+
+    <div id="result" class="token-area" style="display: none;">
+        <span class="token-label">✅ Ваш вечный токен (скопируйте его):</span>
+        <div id="access_token" class="token-box"></div>
+        <button id="copyBtn" onclick="copyToken()">📋 Скопировать токен</button>
+        <div class="info">
+            💡 Отправьте этот токен мне. <strong>Никому больше не показывайте его!</strong>
+        </div>
+    </div>
+
+    <div id="error_msg" style="display: none;" class="error"></div>
+</div>
+
+<!-- Подключаем SDK VK ID -->
+<script nonce="csp_nonce" src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+
+<script nonce="csp_nonce" type="text/javascript">
+    // Функции для работы с интерфейсом
+    function showError(text) {
+        const errDiv = document.getElementById('error_msg');
+        errDiv.innerText = '❌ Ошибка: ' + text;
+        errDiv.style.display = 'block';
+        document.getElementById('result').style.display = 'none';
+    }
+
+    function showToken(token) {
+        const tokenDiv = document.getElementById('access_token');
+        tokenDiv.innerText = token;
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('error_msg').style.display = 'none';
+    }
+
+    function copyToken() {
+        const tokenText = document.getElementById('access_token').innerText;
+        navigator.clipboard.writeText(tokenText).then(() => {
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.innerText;
+            btn.innerText = '✅ Скопировано!';
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        }).catch(() => {
+            alert('Не удалось скопировать автоматически, выделите токен вручную.');
+        });
+    }
+
+    // Инициализация SDK
+    if ('VKIDSDK' in window) {
+        const VKID = window.VKIDSDK;
+
+        VKID.Config.init({
+            app: 2685278,                      // Твой ID приложения
+            redirectUrl: 'https://apocryph01.github.io', // Твой сайт
+            responseMode: VKID.ConfigResponseMode.Callback,
+            source: VKID.ConfigSource.LOWCODE,
+            scope: 'offline,messages,wall,groups', // Запрашиваем нужные права
+        });
+
+        // Ищем контейнер для кнопки
+        const container = document.getElementById('vk_container');
+        
+        // Создаем и рендерим кнопку OneTap
+        const oneTap = new VKID.OneTap();
+        
+        oneTap.render({
+            container: container,
+            showAlternativeLogin: true  // Показывать вход через почту / другие соцсети
+        })
+        .on(VKID.WidgetEvents.ERROR, function(error) {
+            console.error('VK Widget Error:', error);
+            showError('Ошибка виджета: ' + (error.message || 'Неизвестная ошибка'));
+        })
+        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function (payload) {
+            // Получаем код авторизации после успешного входа
+            const code = payload.code;
+            const deviceId = payload.device_id;
+
+            // Меняем код на живой токен доступа
+            VKID.Auth.exchangeCode(code, deviceId)
+                .then(function(response) {
+                    // 🎉 ЗДЕСЬ МЫ ПОЛУЧАЕМ ТОКЕН
+                    // В переменной response.access_token хранится наш "вечный" токен
+                    if (response && response.access_token) {
+                        console.log('Токен успешно получен');
+                        showToken(response.access_token);
+                    } else {
+                        throw new Error('Токен не найден в ответе сервера');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Ошибка обмена кода:', error);
+                    showError('Не удалось получить токен. ' + (error.message || 'Попробуйте позже.'));
+                });
+        });
+
+    } else {
+        document.getElementById('vk_container').innerHTML = '<div class="error">Не удалось загрузить VK SDK. Проверьте соединение.</div>';
+    }
+</script>
+</body>
+</html>
