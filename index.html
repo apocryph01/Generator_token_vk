@@ -219,21 +219,11 @@
             justify-content: center;
         }
 
-        .vk-id-button {
-            width: 100%;
-        }
         .emoji {
             background: none;
             -webkit-background-clip: unset;
             background-clip: unset;
             color: #2c3e5c;
-        }
-
-        hr {
-            margin: 0.5rem 0 0.2rem;
-            border: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #bdd4e7, transparent);
         }
 
         footer {
@@ -255,6 +245,17 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        
+        .loading-container {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-text {
+            margin-top: 12px;
+            color: #1a4c7a;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 500px) {
@@ -326,8 +327,8 @@
     // Запрашиваемые права (scope) - offline для долгоживущего токена, messages для бота
     const SCOPE = 'offline,messages,wall,groups,photos,status';
     
-    // Redirect URI - используем стандартный пустой URL, который принимает любое приложение VK
-    const REDIRECT_URI = 'https://oauth.vk.com/blank.html';
+    // Redirect URI - используем текущую страницу (всё происходит на одной вкладке)
+    const REDIRECT_URI = window.location.origin + window.location.pathname;
     
     function showError(text) {
         const errDiv = document.getElementById('error_msg');
@@ -335,6 +336,8 @@
         errDiv.style.display = 'block';
         const resultDiv = document.getElementById('result');
         if (resultDiv) resultDiv.style.display = 'none';
+        // Возвращаем кнопку
+        renderButton();
     }
     
     function clearError() {
@@ -357,9 +360,15 @@
         clearError();
     }
     
-    function showLoading(container, text = 'Загрузка...') {
+    function showLoading() {
+        const container = document.getElementById('vk_container');
         if (container) {
-            container.innerHTML = `<div style="text-align:center; padding: 12px;"><div class="loading-spinner"></div> ${text}</div>`;
+            container.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">⏳ Перенаправление на страницу авторизации VK...</div>
+                </div>
+            `;
         }
     }
 
@@ -418,107 +427,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(name);
     }
-
-    // Основная функция авторизации через OAuth (как на vkhost)
-    function startAuth() {
-        // Генерируем случайный state для защиты
-        const state = Math.random().toString(36).substring(2, 15);
-        // Сохраняем state в sessionStorage для проверки при возврате
-        sessionStorage.setItem('vk_auth_state', state);
-        
-        // Формируем URL авторизации VK OAuth
-        const authUrl = `https://oauth.vk.com/authorize?` + 
-            `client_id=${APP_ID}` +
-            `&display=page` +
-            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-            `&scope=${SCOPE}` +
-            `&response_type=token` +  // Используем implicit flow (токен в URL)
-            `&v=5.199` +
-            `&state=${state}`;
-        
-        // Открываем окно авторизации
-        const width = 700;
-        const height = 550;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
-        
-        const authWindow = window.open(authUrl, 'VKAuth', `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`);
-        
-        if (!authWindow) {
-            showError('Не удалось открыть окно авторизации. Разрешите всплывающие окна для этого сайта.');
-            renderButton();
-            return;
-        }
-        
-        // Ожидаем редирект на blank.html с токеном в URL
-        const checkInterval = setInterval(() => {
-            try {
-                // Пытаемся получить URL дочернего окна
-                let currentUrl;
-                try {
-                    currentUrl = authWindow.location.href;
-                } catch (e) {
-                    // cross-origin ошибка пока окно на другом домене - игнорируем
-                    return;
-                }
-                
-                // Если окно закрыто вручную
-                if (authWindow.closed) {
-                    clearInterval(checkInterval);
-                    showError('Авторизация отменена пользователем');
-                    renderButton();
-                    return;
-                }
-                
-                // Проверяем, произошёл ли редирект на blank.html
-                if (currentUrl && currentUrl.startsWith(REDIRECT_URI)) {
-                    clearInterval(checkInterval);
-                    
-                    // Извлекаем токен из URL (implicit flow)
-                    const hashParams = new URLSearchParams(currentUrl.split('#')[1]);
-                    const accessToken = hashParams.get('access_token');
-                    const stateBack = hashParams.get('state');
-                    const savedState = sessionStorage.getItem('vk_auth_state');
-                    
-                    if (accessToken && stateBack === savedState) {
-                        // Успешно получили токен
-                        showToken(accessToken);
-                        authWindow.close();
-                        // Очищаем URL от параметров
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        renderButton(); // возвращаем кнопку
-                    } else {
-                        // Возможная ошибка
-                        const error = hashParams.get('error');
-                        const errorDesc = hashParams.get('error_description');
-                        if (error) {
-                            showError(`Ошибка: ${errorDesc || error}`);
-                        } else {
-                            showError('Не удалось получить токен. Попробуйте снова.');
-                        }
-                        authWindow.close();
-                        renderButton();
-                    }
-                }
-            } catch (e) {
-                // Игнорируем ошибки доступа
-            }
-        }, 200);
-        
-        // Таймаут на случай, если пользователь не завершил авторизацию
-        setTimeout(() => {
-            if (authWindow && !authWindow.closed) {
-                clearInterval(checkInterval);
-                authWindow.close();
-                showError('Время ожидания авторизации истекло. Попробуйте снова.');
-                renderButton();
-            }
-        }, 180000); // 3 минуты
-    }
     
-    // Проверяем, вернулись ли мы с авторизации с токеном в URL
+    // Проверяем, вернулись ли мы с авторизации с токеном в URL (фрагмент #)
     function checkForTokenOnLoad() {
-        // Проверяем фрагмент URL (hash) на наличие токена
+        // Проверяем фрагмент URL (hash) на наличие токена (implicit flow)
         const hash = window.location.hash;
         if (hash && hash.includes('access_token')) {
             const hashParams = new URLSearchParams(hash.substring(1));
@@ -530,6 +442,7 @@
                 // Очищаем hash в URL
                 window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
                 showToken(accessToken);
+                sessionStorage.removeItem('vk_auth_state');
                 renderButton();
                 return true;
             } else {
@@ -543,7 +456,88 @@
                 return false;
             }
         }
+        
+        // Проверяем параметры URL (для auth code flow, если потребуется)
+        const code = getUrlParameter('code');
+        if (code) {
+            // Если есть code, обмениваем его на токен через JSONP
+            const state = getUrlParameter('state');
+            const savedState = sessionStorage.getItem('vk_auth_state');
+            if (state === savedState) {
+                exchangeCodeForToken(code);
+                return true;
+            }
+        }
+        
         return false;
+    }
+    
+    // Обмен code на токен (если используется auth code flow)
+    function exchangeCodeForToken(code) {
+        showLoading();
+        const state = sessionStorage.getItem('vk_auth_state');
+        
+        const callbackName = 'vkCallback_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+        window[callbackName] = function(response) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            
+            if (response && response.access_token) {
+                showToken(response.access_token);
+                sessionStorage.removeItem('vk_auth_state');
+                // Очищаем URL от параметров
+                window.history.replaceState({}, document.title, window.location.pathname);
+                renderButton();
+            } else {
+                let errorMsg = response?.error_description || response?.error || 'Неизвестная ошибка';
+                showError(`Не удалось получить токен: ${errorMsg}`);
+                renderButton();
+            }
+        };
+        
+        const url = `https://oauth.vk.com/access_token?` +
+            `client_id=${APP_ID}` +
+            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+            `&code=${code}` +
+            `&v=5.199` +
+            `&callback=${callbackName}`;
+        
+        const script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+        
+        // Таймаут
+        setTimeout(() => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                showError('Превышено время ожидания при получении токена');
+                renderButton();
+            }
+        }, 30000);
+    }
+    
+    // Основная функция авторизации - редирект на текущей вкладке
+    function startAuth() {
+        // Генерируем случайный state для защиты
+        const state = Math.random().toString(36).substring(2, 15);
+        // Сохраняем state в sessionStorage для проверки при возврате
+        sessionStorage.setItem('vk_auth_state', state);
+        
+        // Используем implicit flow (токен в #) - самый простой способ
+        const authUrl = `https://oauth.vk.com/authorize?` + 
+            `client_id=${APP_ID}` +
+            `&display=page` +
+            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+            `&scope=${SCOPE}` +
+            `&response_type=token` +
+            `&v=5.199` +
+            `&state=${state}`;
+        
+        // Показываем индикатор загрузки перед редиректом
+        showLoading();
+        
+        // Перенаправляем на той же вкладке
+        window.location.href = authUrl;
     }
     
     function renderButton() {
