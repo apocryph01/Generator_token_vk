@@ -321,13 +321,11 @@
 </div>
 
 <script type="text/javascript">
-    // ID приложения Kate Mobile (имеет все нужные права, включая messages)
+    // ID приложения
     const APP_ID = 2685278;
-    
-    // Запрашиваемые права (scope) - offline для долгоживущего токена, messages для бота
+    // Запрашиваемые права
     const SCOPE = 'offline,messages,wall,groups,photos,status';
     
-    // Redirect URI - используем blank.html, который разрешён для всех приложений VK
     const REDIRECT_URI = 'https://oauth.vk.com/blank.html';
     
     // Хранилище для состояния авторизации
@@ -525,9 +523,6 @@
             <button id="authButton" style="background: #2787f5; color: white; border: none; padding: 14px 24px; border-radius: 44px; font-weight: 600; font-size: 1rem; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 🔑 Получить токен ВК
             </button>
-            <p style="font-size: 0.75rem; margin-top: 12px; text-align: center; color: #4a627a;">
-                Права: сообщения, стена, группы, фото, бессрочный доступ
-            </p>
         `;
         
         const authBtn = document.getElementById('authButton');
