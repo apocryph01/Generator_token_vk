@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Получение токена для бота ВК — безопасная генерация</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.03);
+            padding: 2rem 1.8rem 2.2rem;
+            max-width: 560px;
+            width: 100%;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 620;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #1a2a3a, #1e3a5f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .description {
+            background: #f4f7fc;
+            border-radius: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            margin: 1.2rem 0 1.6rem 0;
+            text-align: left;
+            border-left: 4px solid #2787f5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .steps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .steps-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            color: #1f2a3e;
+            font-weight: 470;
+        }
+
+        .steps-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            display: inline-flex;
+            background: #2787f5;
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 30px;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            margin-top: 0px;
+            box-shadow: 0 2px 5px rgba(39,135,245,0.2);
+        }
+
+        .step-text {
+            flex: 1;
+        }
+
+        .step-text strong {
+            font-weight: 600;
+            color: #0f2b3d;
+        }
+
+        .info-note {
+            font-size: 0.8rem;
+            color: #4a627a;
+            margin-top: 10px;
+            background: #eef2f7;
+            border-radius: 20px;
+            padding: 6px 12px;
+            display: inline-block;
+        }
+
+        .token-area {
+            margin-top: 24px;
+            text-align: left;
+            border-top: 1px solid #e2edf7;
+            padding-top: 22px;
+        }
+
+        .token-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1a4c7a;
+            font-size: 0.95rem;
+        }
+
+        .token-box {
+            background: #f1f5f9;
+            border: 1px solid #cfdfed;
+            border-radius: 18px;
+            padding: 14px 18px;
+            word-break: break-all;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            color: #0c2e42;
+            margin-bottom: 18px;
+            max-height: 180px;
+            overflow-y: auto;
+            transition: 0.1s;
+            letter-spacing: 0.2px;
+        }
+
+        button {
+            background: #2787f5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 44px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        button:hover {
+            background: #1a6bc9;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(39, 135, 245, 0.2);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .error {
+            color: #b91c1c;
+            background: #ffe9e9;
+            padding: 14px;
+            border-radius: 1.2rem;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            border-left: 4px solid #dc2626;
+            font-weight: 500;
+        }
+
+        .info {
+            background: #eef4ff;
+            padding: 12px 18px;
+            border-radius: 1.2rem;
+            font-size: 0.85rem;
+            color: #0c4e6e;
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            border: 1px solid #cde3fc;
+        }
+
+        .info a {
+            color: #1a66b9;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dashed #90b8e0;
+        }
+
+        .info a:hover {
+            color: #0c4c8a;
+            border-bottom-style: solid;
+        }
+
+        #vk_container {
+            margin: 8px 0 6px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .vk-id-button {
+            width: 100%;
+        }
+        .emoji {
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: #2c3e5c; /* или любой другой подходящий цвет */
+        }
+
+        hr {
+            margin: 0.5rem 0 0.2rem;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #bdd4e7, transparent);
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 1.8rem;
+            color: #7e8b9c;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            .step-text {
+                font-size: 0.93rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>
+        <span class="emoji">🔑️
+        </span>
+        Генератор токена
+    </h1>
+    <div class="description">
+        <ul class="steps-list">
+            <li>
+                <span class="step-number">1</span>
+                <span class="step-text"><strong>Нажмите</strong> на кнопку ниже</span>
+            </li>
+            <li>
+                <span class="step-number">2</span>
+                <span class="step-text"><strong>Войдите</strong> в аккаунт ВКонтакте и разрешите доступ</span>
+            </li>
+            <li>
+                <span class="step-number">3</span>
+                <span class="step-text"><strong>Получите</strong> токен для вашего бота</span>
+            </li>
+        </ul>
+        <div class="info-note">
+            ✨ После авторизации токен появится ниже
+        </div>
+    </div>
+
+    <!-- Контейнер для кнопки VK ID -->
+    <div id="vk_container"></div>
+
+    <!-- Блок с результатом (токеном) -->
+    <div id="result" class="token-area" style="display: none;">
+        <span class="token-label">
+            🔐 Ваш токен доступа (скопируйте его):
+        </span>
+        <div id="access_token" class="token-box"></div>
+        <button id="copyBtn" onclick="copyToken()">
+            📋 Скопировать токен
+        </button>
+        <div class="info">
+            💡 Отправьте этот токен <a href="https://vk.com/id164971926" target="_blank" rel="noopener noreferrer">кодеру</a>.
+            <strong>Никому больше не показывайте его!</strong>
+        </div>
+    </div>
+
+    <div id="error_msg" style="display: none;" class="error"></div>
+    <footer>⚡ Безопасная генерация через VK ID</footer>
+</div>
+
+<!-- Подключаем SDK VK ID с указанием CSP nonce (nonce тут для совместимости, но атрибут сохранен) -->
+<script nonce="csp_nonce" src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+
+<script nonce="csp_nonce" type="text/javascript">
+    // ----- Вспомогательные функции UI -----
+    function showError(text) {
+        const errDiv = document.getElementById('error_msg');
+        errDiv.innerText = '❌ Ошибка: ' + text;
+        errDiv.style.display = 'block';
+        const resultDiv = document.getElementById('result');
+        if (resultDiv) resultDiv.style.display = 'none';
+        // Также скрываем возможные лишние элементы, но оставляем кнопку
+    }
+
+    function showToken(token) {
+        const tokenDiv = document.getElementById('access_token');
+        if (tokenDiv) {
+            tokenDiv.innerText = token;
+        }
+        const resultDiv = document.getElementById('result');
+        if (resultDiv) {
+            resultDiv.style.display = 'block';
+        }
+        const errDiv = document.getElementById('error_msg');
+        if (errDiv) {
+            errDiv.style.display = 'none';
+        }
+    }
+
+    window.copyToken = function() {
+        const tokenTextElem = document.getElementById('access_token');
+        if (!tokenTextElem) return;
+        const token = tokenTextElem.innerText;
+        if (!token || token.trim() === '') {
+            alert('Токен отсутствует, нечего копировать.');
+            return;
+        }
+        navigator.clipboard.writeText(token).then(() => {
+            const btn = document.getElementById('copyBtn');
+            if (btn) {
+                const originalText = btn.innerText;
+                btn.innerText = '✅ Скопировано!';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                }, 2000);
+            }
+        }).catch(() => {
+            alert('Не удалось скопировать автоматически, выделите токен вручную.');
+        });
+    };
+
+    // ----- Инициализация VK ID SDK и обработка авторизации -----
+    function initVKID() {
+        // Проверяем, загрузился ли SDK глобально
+        if (!window.VKIDSDK) {
+            const container = document.getElementById('vk_container');
+            if (container) {
+                container.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK SDK. Проверьте соединение с интернетом и перезагрузите страницу.</div>';
+            }
+            console.error('VKIDSDK is not loaded');
+            return;
+        }
+
+        const VKID = window.VKIDSDK;
+
+        // Инициализация конфигурации приложения
+        try {
+            VKID.Config.init({
+                app: 2685278,                // ID приложения (твой ключ)
+                redirectUrl: 'https://apocryph01.github.io/token_generator', // URL текущего сайта (должен совпадать с настройками приложения)
+                responseMode: VKID.ConfigResponseMode.Callback,
+                source: VKID.ConfigSource.LOWCODE,
+                scope: 'offline,messages,wall,groups',   // запрашиваем права для бота (offline даёт долгоживущий токен)
+            });
+        } catch (err) {
+            console.error('Ошибка инициализации VKID.Config:', err);
+            showError('Не удалось настроить VK ID. Обратитесь к разработчику.');
+            return;
+        }
+
+        const container = document.getElementById('vk_container');
+        if (!container) return;
+
+        // Очищаем контейнер перед рендером (на случай повторных вызовов)
+        container.innerHTML = '';
+
+        // Создаем экземпляр OneTap (кнопка входа)
+        let oneTap;
+        try {
+            oneTap = new VKID.OneTap();
+        } catch (e) {
+            console.error('Ошибка создания OneTap:', e);
+            showError('Ошибка инициализации виджета входа. Попробуйте обновить страницу.');
+            return;
+        }
+
+        // Рендерим кнопку с настройками: альтернативный вход включён
+        oneTap.render({
+            container: container,
+            showAlternativeLogin: true,
+        })
+        .on(VKID.WidgetEvents.ERROR, function(error) {
+            console.error('VK Widget Error детально:', error);
+            let errorText = 'Неизвестная ошибка виджета';
+            if (error && error.message) {
+                errorText = error.message;
+            } else if (error && typeof error === 'string') {
+                errorText = error;
+            } else if (error && error.error_description) {
+                errorText = error.error_description;
+            }
+            showError(`Ошибка виджета: ${errorText}. Проверьте, что сайт добавлен в доверенные redirect URIs в настройках приложения VK.`);
+        })
+        .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, function(payload) {
+            // payload содержит code и device_id после успешного входа пользователя
+            if (!payload || !payload.code) {
+                showError('Не получен код авторизации. Попробуйте ещё раз.');
+                return;
+            }
+            const code = payload.code;
+            const deviceId = payload.device_id || '';
+
+            // Обмениваем код на access token через встроенный метод VKID.Auth.exchangeCode
+            VKID.Auth.exchangeCode(code, deviceId)
+                .then(function(response) {
+                    if (response && response.access_token) {
+                        // Токен успешно получен (offline scope даёт долгоживущий токен)
+                        console.log('Токен получен, первые символы:', response.access_token.substring(0, 12) + '...');
+                        showToken(response.access_token);
+                    } else {
+                        // Иногда может прийти response, но без поля access_token
+                        console.warn('Структура ответа exchangeCode:', response);
+                        throw new Error('Сервер VK не вернул access_token.');
+                    }
+                })
+                .catch(function(exchangeError) {
+                    console.error('Ошибка при обмене кода на токен:', exchangeError);
+                    let detailed = '';
+                    if (exchangeError && exchangeError.message) {
+                        detailed = exchangeError.message;
+                    } else if (exchangeError && exchangeError.error) {
+                        detailed = JSON.stringify(exchangeError.error);
+                    } else {
+                        detailed = 'Неизвестная ошибка обмена';
+                    }
+                    showError(`Не удалось получить токен: ${detailed}. Проверьте настройки приложения (redirect_uri должен быть точным).`);
+                });
+        });
+    }
+
+    // Запускаем инициализацию, когда DOM полностью загружен и SDK доступен
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Небольшая задержка, чтобы SDK успел зарегистрироваться, хотя скрипт загружается асинхронно
+            setTimeout(() => {
+                if (window.VKIDSDK) {
+                    initVKID();
+                } else {
+                    // Если SDK ещё не готов, подождём событие загрузки скрипта
+                    window.addEventListener('load', function() {
+                        if (window.VKIDSDK) initVKID();
+                        else showError('Не загрузился VK ID SDK. Проверьте интернет и CSP.');
+                    });
+                }
+            }, 50);
+        });
+    } else {
+        setTimeout(() => {
+            if (window.VKIDSDK) initVKID();
+            else {
+                window.addEventListener('load', () => {
+                    if (window.VKIDSDK) initVKID();
+                    else showError('Не загрузился VK ID SDK. Попробуйте перезагрузить страницу.');
+                });
+            }
+        }, 50);
+    }
+
+    // Дополнительная защита: если скрипт SDK не загрузился через 3 секунды – показать ошибку
+    setTimeout(function() {
+        if (!window.VKIDSDK && !document.getElementById('error_msg')?.innerText) {
+            const containerVk = document.getElementById('vk_container');
+            if (containerVk && !containerVk.innerHTML.trim()) {
+                containerVk.innerHTML = '<div class="error">⚠️ Не удалось загрузить библиотеку VK ID. Проверьте соединение с интернетом и наличие блокировщиков.</div>';
+            }
+        }
+    }, 3000);
+</script>
+</body>
+</html>
