@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Получение токена для бота ВК</title>
+    <title>Получение токена ВК</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,7 +27,7 @@
             border-radius: 2rem;
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.03);
             padding: 2rem 1.8rem 2.2rem;
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             transition: all 0.2s ease;
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -46,23 +46,30 @@
             gap: 8px;
             justify-content: center;
         }
-
+        .badge {
+            background: #e8f0fe;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #1e6faf;
+            display: inline-block;
+            margin-left: 8px;
+        }
         .description {
             background: #f4f7fc;
             border-radius: 1.5rem;
             padding: 1.25rem 1.5rem;
             margin: 1.2rem 0 1.6rem 0;
             text-align: left;
-            border-left: 4px solid #2787f5;
+            border-left: 4px solid #ff9800;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
-
         .steps-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-
         .steps-list li {
             display: flex;
             align-items: flex-start;
@@ -73,14 +80,12 @@
             color: #1f2a3e;
             font-weight: 470;
         }
-
         .steps-list li:last-child {
             margin-bottom: 0;
         }
-
         .step-number {
             display: inline-flex;
-            background: #2787f5;
+            background: #ff9800;
             color: white;
             width: 26px;
             height: 26px;
@@ -91,18 +96,15 @@
             font-size: 0.85rem;
             flex-shrink: 0;
             margin-top: 0px;
-            box-shadow: 0 2px 5px rgba(39,135,245,0.2);
+            box-shadow: 0 2px 5px rgba(255,152,0,0.2);
         }
-
         .step-text {
             flex: 1;
         }
-
         .step-text strong {
             font-weight: 600;
             color: #0f2b3d;
         }
-
         .info-note {
             font-size: 0.8rem;
             color: #4a627a;
@@ -112,14 +114,12 @@
             padding: 6px 12px;
             display: inline-block;
         }
-
         .token-area {
             margin-top: 24px;
             text-align: left;
             border-top: 1px solid #e2edf7;
             padding-top: 22px;
         }
-
         .token-label {
             font-weight: 600;
             margin-bottom: 10px;
@@ -129,7 +129,6 @@
             color: #1a4c7a;
             font-size: 0.95rem;
         }
-
         .token-box {
             background: #f1f5f9;
             border: 1px solid #cfdfed;
@@ -146,9 +145,8 @@
             transition: 0.1s;
             letter-spacing: 0.2px;
         }
-
         button {
-            background: #2787f5;
+            background: #ff9800;
             color: white;
             border: none;
             padding: 12px 20px;
@@ -164,17 +162,22 @@
             gap: 8px;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
         }
-
         button:hover {
-            background: #1a6bc9;
+            background: #e68900;
             transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(39, 135, 245, 0.2);
+            box-shadow: 0 8px 18px rgba(255,152,0,0.25);
         }
-
         button:active {
             transform: translateY(1px);
         }
-
+        .secondary-btn {
+            background: #2787f5;
+            margin-top: 12px;
+            box-shadow: none;
+        }
+        .secondary-btn:hover {
+            background: #1a6bc9;
+        }
         .error {
             color: #b91c1c;
             background: #ffe9e9;
@@ -185,7 +188,6 @@
             border-left: 4px solid #dc2626;
             font-weight: 500;
         }
-
         .info {
             background: #eef4ff;
             padding: 12px 18px;
@@ -200,50 +202,16 @@
             justify-content: center;
             border: 1px solid #cde3fc;
         }
-
         .info a {
             color: #1a66b9;
             font-weight: 600;
             text-decoration: none;
             border-bottom: 1px dashed #90b8e0;
         }
-
         .info a:hover {
             color: #0c4c8a;
             border-bottom-style: solid;
         }
-
-        #vk_container {
-            margin: 8px 0 6px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .vk-id-button {
-            width: 100%;
-        }
-        .emoji {
-            background: none;
-            -webkit-background-clip: unset;
-            background-clip: unset;
-            color: #2c3e5c;
-        }
-
-        hr {
-            margin: 0.5rem 0 0.2rem;
-            border: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #bdd4e7, transparent);
-        }
-
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            margin-top: 1.8rem;
-            color: #7e8b9c;
-        }
-
-        /* Стили для загрузки */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -253,40 +221,59 @@
             border-top-color: white;
             animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
+        .kate-btn-block {
+            margin: 15px 0 5px;
+        }
+        .manual-block {
+            background: #fff7e5;
+            border-radius: 1.2rem;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid #ffe0a3;
+        }
+        .manual-block summary {
+            font-weight: 600;
+            color: #c47d00;
+            cursor: pointer;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+        hr {
+            margin: 0.8rem 0;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #bdd4e7, transparent);
+        }
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 1.8rem;
+            color: #7e8b9c;
+        }
         @media (max-width: 500px) {
-            .card {
-                padding: 1.5rem;
-            }
-            h1 {
-                font-size: 1.6rem;
-            }
-            .step-text {
-                font-size: 0.93rem;
-            }
+            .card { padding: 1.5rem; }
+            h1 { font-size: 1.6rem; }
+            .step-text { font-size: 0.93rem; }
         }
     </style>
 </head>
 <body>
-
 <div class="card">
     <h1>
-        <span class="emoji">🔑️</span>
-        Генератор токена ВК
+        🔑 Токен ВК <span class="badge">Kate Mobile</span>
     </h1>
     <div class="description">
         <ul class="steps-list">
             <li>
                 <span class="step-number">1</span>
-                <span class="step-text"><strong>Нажмите</strong> на кнопку "Войти через VK ID" ниже</span>
+                <span class="step-text"><strong>Нажмите</strong> на кнопку "Войти через Kate Mobile"</span>
             </li>
             <li>
                 <span class="step-number">2</span>
-                <span class="step-text"><strong>Войдите</strong> в аккаунт ВКонтакте и разрешите доступ</span>
+                <span class="step-text"><strong>Разрешите</strong> доступ к сообщениям и другим данным</span>
             </li>
             <li>
                 <span class="step-number">3</span>
@@ -294,39 +281,52 @@
             </li>
         </ul>
         <div class="info-note">
-            ✨ Токен появляется автоматически после авторизации
+            📱 Метод работает через официальное приложение Kate Mobile (токен с правами messages)
         </div>
     </div>
 
-    <!-- Контейнер для кнопки VK ID -->
-    <div id="vk_container"></div>
+    <!-- Основная кнопка Kate Mobile -->
+    <div id="kate_button_container" class="kate-btn-block"></div>
+    
+    <!-- Альтернативный ручной способ -->
+    <details class="manual-block">
+        <summary>🔧 Если кнопка не работает — инструкция для ручного получения токена</summary>
+        <div style="margin-top: 12px; font-size: 0.85rem;">
+            <p>1️⃣ Установите <strong>Kate Mobile</strong> из Google Play или App Store.<br>
+            2️⃣ Войдите в аккаунт ВК через приложение.<br>
+            3️⃣ Откройте <strong>Настройки → О приложении</strong> (иногда "Расширенные настройки").<br>
+            4️⃣ Нажмите несколько раз на логотип Kate Mobile → появится <strong>Режим разработчика</strong>.<br>
+            5️⃣ В разделе разработчика нажмите <strong>"Получить токен доступа"</strong> со всеми правами.<br>
+            6️⃣ Скопируйте токен и вставьте в поле ниже.</p>
+            <div style="margin-top: 12px;">
+                <textarea id="manual_token_input" rows="2" placeholder="Вставьте сюда токен из Kate Mobile..." style="width:100%; border-radius:18px; border:1px solid #ffcd94; padding:12px; font-family:monospace; font-size:0.8rem;"></textarea>
+                <button id="use_manual_token_btn" style="background:#ff9800; margin-top:10px;">✅ Использовать этот токен</button>
+            </div>
+        </div>
+    </details>
 
     <!-- Блок с результатом (токеном) -->
     <div id="result" class="token-area" style="display: none;">
         <span class="token-label">
-            🔐 Ваш токен доступа (скопируйте его):
+            🔐 Ваш токен доступа (скопируйте для бота):
         </span>
         <div id="access_token" class="token-box"></div>
-        <button id="copyBtn" onclick="copyToken()">
+        <button id="copyBtn">
             📋 Скопировать токен
         </button>
         <div class="info">
             💡 Отправьте этот токен <a href="https://vk.com/id164971926" target="_blank" rel="noopener noreferrer">кодеру</a>.
-            <strong>Никому больше не показывайте его!</strong>
+            <strong>Никому не показывайте!</strong><br>
+            ⚠️ Токен имеет права на <strong>сообщения, стены, группы, фото, офлайн-доступ</strong>.
         </div>
     </div>
 
     <div id="error_msg" style="display: none;" class="error"></div>
-    <footer>⚡ Безопасная генерация через VK ID | Токен хранится только в вашем браузере</footer>
+    <footer>🔒 Безопасность: токен хранится только в браузере | Работает через схему OAuth Kate Mobile<br>v.2.0 — обход ограничений новых приложений ВК</footer>
 </div>
 
-<!-- Подключаем SDK VK ID с правильной версией -->
-<script src="https://unpkg.com/@vkid/sdk@2.0.0/dist-sdk/umd/index.js"></script>
-
-<script type="text/javascript">
-    // ----- Вспомогательные функции UI -----
-    let currentAuthFlow = null; // для отслеживания текущей авторизации
-    
+<script>
+    // ---- Вспомогательные UI ----
     function showError(text) {
         const errDiv = document.getElementById('error_msg');
         errDiv.innerText = '❌ Ошибка: ' + text;
@@ -344,6 +344,10 @@
     }
 
     function showToken(token) {
+        if (!token || token.trim() === '') {
+            showError('Токен пуст, попробуйте ещё раз');
+            return false;
+        }
         const tokenDiv = document.getElementById('access_token');
         if (tokenDiv) {
             tokenDiv.innerText = token;
@@ -353,8 +357,14 @@
             resultDiv.style.display = 'block';
         }
         clearError();
+        // Сохраняем в localStorage для удобства, но не критично
+        try {
+            localStorage.setItem('vk_last_token', token);
+        } catch(e) {}
+        return true;
     }
 
+    // Функция копирования (глобальная)
     window.copyToken = function() {
         const tokenTextElem = document.getElementById('access_token');
         if (!tokenTextElem) return;
@@ -363,8 +373,6 @@
             alert('❌ Токен отсутствует, нечего копировать.');
             return;
         }
-        
-        // Современный способ копирования с fallback
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(token).then(() => {
                 const btn = document.getElementById('copyBtn');
@@ -375,9 +383,7 @@
                         btn.innerHTML = originalText;
                     }, 2000);
                 }
-            }).catch(() => {
-                fallbackCopy(token);
-            });
+            }).catch(() => fallbackCopy(token));
         } else {
             fallbackCopy(token);
         }
@@ -396,199 +402,272 @@
             if (btn) {
                 const originalText = btn.innerText;
                 btn.innerHTML = '✅ Скопировано!';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                }, 2000);
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
             }
         } catch (err) {
-            alert('❌ Не удалось скопировать. Выделите токен вручную и нажмите Ctrl+C');
+            alert('❌ Не удалось скопировать. Выделите токен вручную.');
         }
         document.body.removeChild(textarea);
     }
 
-    // ----- Инициализация VK ID SDK и обработка авторизации -----
-    async function initVKID() {
-        // Проверяем, загрузился ли SDK глобально
-        if (!window.VKIDSDK) {
-            console.error('VKIDSDK is not loaded yet, waiting...');
-            // Ждем загрузки SDK
-            let attempts = 0;
-            const maxAttempts = 50;
-            const checkInterval = setInterval(() => {
-                attempts++;
-                if (window.VKIDSDK) {
-                    clearInterval(checkInterval);
-                    initVKID();
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(checkInterval);
-                    const container = document.getElementById('vk_container');
-                    if (container) {
-                        container.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK SDK. Проверьте соединение с интернетом и перезагрузите страницу.</div>';
-                    }
-                    showError('Не удалось загрузить VK ID SDK. Попробуйте обновить страницу.');
-                }
-            }, 100);
-            return;
+    // ---- Парсинг токена из URL (возврат от Kate Mobile через редирект) ----
+    function parseTokenFromHashOrQuery() {
+        // Kate Mobile обычно возвращает токен в параметре #access_token=... в фрагменте
+        let hash = window.location.hash.substring(1);
+        let params = new URLSearchParams(hash);
+        let accessToken = params.get('access_token');
+        if (accessToken) {
+            console.log('Токен найден в hash');
+            return accessToken;
         }
-
-        const VKID = window.VKIDSDK;
-        
-        // ID приложения (замените на свой, если нужно)
-        const APP_ID = 2685278;
-        // Текущий URL для редиректа (должен быть точным и добавлен в настройках приложения)
-        const CURRENT_URL = window.location.origin + window.location.pathname;
-
-        console.log('Инициализация VK ID с URL:', CURRENT_URL);
-        
-        // Инициализация конфигурации приложения
-        try {
-            VKID.Config.init({
-                app: APP_ID,
-                redirectUrl: CURRENT_URL,
-                responseMode: VKID.ConfigResponseMode.Callback,
-                source: VKID.ConfigSource.LOWCODE,
-                scope: 'offline,messages,wall,groups,photos', // offline даёт долгоживущий токен
-                // Добавляем state для безопасности
-                state: Math.random().toString(36).substring(2, 15)
-            });
-            console.log('VK ID Config инициализирован успешно');
-        } catch (err) {
-            console.error('Ошибка инициализации VKID.Config:', err);
-            showError('Не удалось настроить VK ID. Обратитесь к разработчику.');
-            return;
+        // Проверяем также query string (на всякий случай)
+        let query = window.location.search.substring(1);
+        let queryParams = new URLSearchParams(query);
+        let tokenFromQuery = queryParams.get('access_token');
+        if (tokenFromQuery) {
+            console.log('Токен найден в query');
+            return tokenFromQuery;
         }
+        // Также могут вернуть токен в параметре 'token' (редко)
+        let tokenAlt = params.get('token') || queryParams.get('token');
+        if (tokenAlt) return tokenAlt;
+        return null;
+    }
 
-        const container = document.getElementById('vk_container');
-        if (!container) return;
-
-        // Очищаем контейнер перед рендером
-        container.innerHTML = '';
-
-        // Проверяем, есть ли уже код в URL (после редиректа от VK)
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
+    // ---- Открытие Kate Mobile OAuth (схема: katemobile:// или через webview fallback) ----
+    // Используем клиентские ID приложения Kate Mobile (известный публичный ID)
+    // Kate Mobile использует app_id = 2685278 (это ID их официального приложения)
+    // Но чтобы получить токен с правами сообщений, нужно использовать именно их схему.
+    // Редирект: katemobile://vk.com/blank.html или katemobile://oauth
+    // Также можно использовать callback_url: katemobile://authorize
+    function startKateMobileOAuth() {
+        clearError();
+        // Набор прав, необходимых для бота (сообщения, офлайн, стена, фото, группы)
+        const scope = 'messages,offline,wall,groups,photos,docs';
+        // Используем redirect_uri, который понимает Kate Mobile
+        // Официальная схема приложения: katemobile://authorize (обрабатывается приложением)
+        // Если приложение не установлено, откроем fallback через web версию.
+        const redirectUri = 'katemobile://authorize';
+        // ID приложения Kate Mobile (публичный)
+        const clientId = '2685278';
+        // Строим URL OAuth ВК с возвратом на схему katemobile
+        const authUrl = `https://oauth.vk.com/authorize?client_id=${clientId}&display=mobile&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token&v=5.131&state=kate_mobile_token`;
         
-        if (code) {
-            // Если есть код в URL, значит возврат от VK ID, обрабатываем
-            console.log('Обнаружен код авторизации в URL, обмениваем на токен');
-            // Показываем индикатор загрузки
-            container.innerHTML = '<div style="text-align:center; padding: 12px;"><div class="loading-spinner"></div> Получение токена...</div>';
-            
-            try {
-                // Обмениваем код на токен
-                const tokenResponse = await VKID.Auth.exchangeCode(code, '');
-                if (tokenResponse && tokenResponse.access_token) {
-                    console.log('Токен успешно получен');
-                    showToken(tokenResponse.access_token);
-                    // Очищаем URL от параметров, чтобы не было путаницы
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    container.innerHTML = ''; // Очищаем индикатор загрузки
-                    // Заново рендерим кнопку
-                    renderButton(VKID, container);
-                } else {
-                    throw new Error('Не получен access_token в ответе');
+        // Пытаемся открыть через intent / переход
+        // Также создаём резервную кнопку: если приложение не открылось, показать инструкцию
+        let iframeFallback = null;
+        
+        // Пробуем открыть URL в том же окне - для мобильных браузеров сработает глубокое ссылка
+        window.location.href = authUrl;
+        
+        // Устанавливаем таймаут: если через 2.5 секунды ничего не произошло, показываем предупреждение
+        // (не сработает если редирект произойдет мгновенно)
+        setTimeout(() => {
+            // Если мы всё ещё на этой странице (пользователь не ушел), показываем подсказку
+            if (document.visibilityState !== 'hidden') {
+                const container = document.getElementById('kate_button_container');
+                if (container) {
+                    let warning = document.createElement('div');
+                    warning.className = 'error';
+                    warning.style.marginTop = '12px';
+                    warning.innerText = '⚠️ Не удалось открыть Kate Mobile. Убедитесь, что приложение Kate Mobile установлено на устройстве. Нажмите на ссылку для ручного входа:';
+                    let link = document.createElement('a');
+                    link.href = authUrl;
+                    link.target = '_blank';
+                    link.style.display = 'block';
+                    link.style.marginTop = '8px';
+                    link.style.color = '#ff9800';
+                    link.style.fontWeight = 'bold';
+                    link.innerText = '🔗 Нажмите здесь, если приложение не открылось';
+                    warning.appendChild(link);
+                    container.appendChild(warning);
                 }
-            } catch (exchangeError) {
-                console.error('Ошибка при обмене кода на токен:', exchangeError);
-                container.innerHTML = '';
-                let errorMsg = exchangeError.message || 'Неизвестная ошибка';
-                showError(`Не удалось получить токен: ${errorMsg}. Убедитесь, что приложение VK настроено правильно.`);
-                renderButton(VKID, container);
             }
-        } else {
-            // Нет кода - просто рендерим кнопку
-            renderButton(VKID, container);
-        }
+        }, 800);
+    }
+
+    // ---- Альтернативный метод: генерация токена через iframe с предустановленным Kate Mobile ID ----
+    // Но безопаснее всего использовать прямой OAuth переход. Реализуем также встроенную кнопку.
+    function renderKateButton() {
+        const container = document.getElementById('kate_button_container');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        const btn = document.createElement('button');
+        btn.innerHTML = '📱 Войти через Kate Mobile';
+        btn.style.background = '#ff9800';
+        btn.style.fontSize = '1.05rem';
+        btn.style.padding = '14px';
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            startKateMobileOAuth();
+        });
+        container.appendChild(btn);
+        
+        // Добавим пояснение для Web версии (компьютер)
+        const hint = document.createElement('div');
+        hint.style.fontSize = '0.75rem';
+        hint.style.marginTop = '10px';
+        hint.style.textAlign = 'center';
+        hint.style.color = '#6c7a8e';
+        hint.innerHTML = '📲 Для получения токена откройте страницу на телефоне с Kate Mobile.<br> На ПК используйте ручной способ (раздел ниже).';
+        container.appendChild(hint);
     }
     
-    function renderButton(VKID, container) {
-        if (!container) return;
-        container.innerHTML = '';
-        
-        // Создаем кнопку входа через VK ID
-        try {
-            const oneTap = new VKID.OneTap();
-            
-            oneTap.render({
-                container: container,
-                showAlternativeLogin: true,
-                buttonType: 'primary', // тип кнопки
-                buttonText: 'continue_with', // текст кнопки
-            })
-            .on(VKID.WidgetEvents.ERROR, function(error) {
-                console.error('VK Widget Error:', error);
-                let errorText = 'Ошибка авторизации';
-                if (error && error.message) {
-                    errorText = error.message;
-                } else if (error && error.error_description) {
-                    errorText = error.error_description;
-                }
-                showError(`Ошибка: ${errorText}. Проверьте настройки приложения VK.`);
-            })
-            .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, async function(payload) {
-                console.log('Успешный вход, получен code');
-                if (!payload || !payload.code) {
-                    showError('Не получен код авторизации');
+    // ---- Ручной ввод токена из текстового поля ----
+    function initManualTokenHandler() {
+        const manualBtn = document.getElementById('use_manual_token_btn');
+        const textarea = document.getElementById('manual_token_input');
+        if (manualBtn && textarea) {
+            manualBtn.addEventListener('click', () => {
+                let token = textarea.value.trim();
+                if (token === '') {
+                    showError('Введите токен из Kate Mobile');
                     return;
                 }
-                
-                const code = payload.code;
-                const deviceId = payload.device_id || '';
-                
-                // Показываем индикатор загрузки
-                container.innerHTML = '<div style="text-align:center; padding: 12px;"><div class="loading-spinner"></div> Получение токена...</div>';
-                
-                try {
-                    const response = await VKID.Auth.exchangeCode(code, deviceId);
-                    if (response && response.access_token) {
-                        console.log('Токен успешно получен через exchangeCode');
-                        showToken(response.access_token);
-                        // Возвращаем кнопку обратно (на случай, если нужно получить еще один токен)
-                        renderButton(VKID, container);
-                    } else {
-                        throw new Error('Пустой ответ от сервера');
+                // Валидация: токен ВК обычно выглядит как vk1.a. ... или строка символов
+                if (token.length < 20) {
+                    showError('Токен слишком короткий, проверьте правильность');
+                    return;
+                }
+                showToken(token);
+                // очищаем поле после успеха
+                textarea.value = '';
+            });
+        }
+    }
+    
+    // ---- Восстановление токена из localStorage (опционально) ----
+    function checkSavedToken() {
+        try {
+            const saved = localStorage.getItem('vk_last_token');
+            if (saved && saved.length > 20) {
+                // Не показываем автоматически, но добавим уведомление
+                const resultDiv = document.getElementById('result');
+                if (resultDiv && resultDiv.style.display !== 'block') {
+                    const notify = document.createElement('div');
+                    notify.className = 'info';
+                    notify.style.marginTop = '10px';
+                    notify.style.cursor = 'pointer';
+                    notify.innerHTML = '📦 Найден сохранённый токен. <span style="text-decoration:underline;">Нажмите для восстановления</span>';
+                    const container = document.getElementById('kate_button_container');
+                    if (container) {
+                        container.parentNode.insertBefore(notify, container.nextSibling);
+                        notify.addEventListener('click', () => {
+                            showToken(saved);
+                            notify.remove();
+                        });
                     }
-                } catch (err) {
-                    console.error('Ошибка exchangeCode:', err);
-                    container.innerHTML = '';
-                    let errorDetail = err.message || 'Неизвестная ошибка';
-                    if (err.error_description) errorDetail = err.error_description;
-                    showError(`Ошибка получения токена: ${errorDetail}`);
-                    renderButton(VKID, container);
+                }
+            }
+        } catch(e) {}
+    }
+    
+    // ---- Проверка наличия URL токена при загрузке (прямой редирект от VK) ----
+    // Если токен вернулся через hash (при использовании web-flow с редиректом на текущую страницу)
+    // Но наш authUrl ведет на katemobile:// схему, которая не вернет обратно на наш сайт.
+    // Однако некоторые пользователи могут скопировать токен из URL после ручного открытия в браузере.
+    // Дополнительно перехватываем параметры в URL (если они вдруг появились при ручном входе через web версию OAuth с редиректом на этот же домен)
+    function checkTokenInUrlFallback() {
+        // Если на текущей странице есть параметр access_token (например при редиректе после ручного входа)
+        const url = new URL(window.location.href);
+        let token = url.searchParams.get('access_token');
+        if (!token) {
+            // Проверим hash
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            token = hashParams.get('access_token');
+        }
+        if (token && token.length > 10) {
+            console.log('Токен обнаружен в URL, отображаем');
+            showToken(token);
+            // Чистим URL от токена чтобы не светился
+            if (window.history && window.history.replaceState) {
+                let cleanUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    // ---- Ручное получение токена через создание popup с Kate Mobile OAuth (для десктопа альтернатива) ----
+    // Реализуем дополнительный метод: "Открыть в новом окне" если нужно.
+    function addAlternativeLoginMethod() {
+        const container = document.getElementById('kate_button_container');
+        if (!container) return;
+        const altLink = document.createElement('div');
+        altLink.style.marginTop = '8px';
+        altLink.style.fontSize = '0.75rem';
+        altLink.style.textAlign = 'center';
+        altLink.innerHTML = '<a href="#" id="alt_oauth_link" style="color:#2787f5;">🔄 Альтернативный вход (браузер)</a>';
+        container.appendChild(altLink);
+        const linkElem = document.getElementById('alt_oauth_link');
+        if (linkElem) {
+            linkElem.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Открываем OAuth в новом окне с редиректом на эту же страницу, где мы потом поймаем токен
+                const scope = 'messages,offline,wall,groups,photos,docs';
+                const clientId = '2685278';
+                const redirectUri = window.location.origin + window.location.pathname;
+                const authWinUrl = `https://oauth.vk.com/authorize?client_id=${clientId}&display=page&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token&v=5.131&state=alt_flow`;
+                // Открываем попап или новое окно
+                const win = window.open(authWinUrl, '_blank', 'width=600,height=700');
+                if (!win) {
+                    showError('Браузер заблокировал всплывающее окно. Разрешите всплывающие окна или используйте кнопку выше');
+                } else {
+                    // Инструкция: после входа скопировать токен из адресной строки нового окна
+                    showError('После авторизации скопируйте токен из адресной строки нового окна (параметр access_token=...) и вставьте в поле ручного ввода', false);
                 }
             });
-        } catch (err) {
-            console.error('Ошибка создания кнопки:', err);
-            container.innerHTML = '<div class="error">⚠️ Ошибка создания виджета входа</div>';
-            showError('Не удалось создать кнопку входа');
         }
     }
-
-    // Запускаем инициализацию
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(initVKID, 100);
-        });
-    } else {
-        setTimeout(initVKID, 100);
-    }
     
-    // Обработчик для кнопки копирования (на случай, если скрипт перезагрузится)
-    if (document.getElementById('copyBtn')) {
-        // Уже определен через onclick
-    }
-    
-    // Дополнительная проверка на случай, если SDK не загрузился
-    setTimeout(function() {
-        if (!window.VKIDSDK && !document.getElementById('error_msg')?.innerText) {
-            const containerVk = document.getElementById('vk_container');
-            if (containerVk && (!containerVk.innerHTML || containerVk.innerHTML.trim() === '')) {
-                containerVk.innerHTML = '<div class="error">⚠️ Не удалось загрузить VK ID SDK. Проверьте интернет и отключите блокировщики рекламы.</div>';
-                showError('Не удалось загрузить библиотеку VK ID');
+    // Инициализация страницы
+    function init() {
+        renderKateButton();
+        initManualTokenHandler();
+        addAlternativeLoginMethod();
+        // Проверяем, есть ли токен в URL (например после альтернативного входа)
+        if (checkTokenInUrlFallback()) {
+            // Уже показали
+        }
+        // Проверяем сохраненный токен
+        checkSavedToken();
+        
+        // Копирование через onclick
+        const copyBtn = document.getElementById('copyBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                window.copyToken();
+            });
+        }
+        
+        // Доп. ловушка: если пользователь вернулся на страницу с hash access_token (например после ручного использования Kate Mobile)
+        // подписываемся на изменение hash (при ручном копировании)
+        window.addEventListener('hashchange', () => {
+            const token = parseTokenFromHashOrQuery();
+            if (token && token.length > 10) {
+                showToken(token);
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-        }
-    }, 5000);
+        });
+        
+        // Проверяем при полной загрузке ещё раз
+        setTimeout(() => {
+            const tokenFromHash = parseTokenFromHashOrQuery();
+            if (tokenFromHash && tokenFromHash.length > 10) {
+                showToken(tokenFromHash);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }, 500);
+    }
+    
+    // Запускаем когда DOM готов
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 </script>
 </body>
 </html>
