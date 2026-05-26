@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Получение токена для бота ВК 1</title>
+    <title>Получение токена для бота ВК</title>
     <style>
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -94,7 +94,7 @@
 <body>
 
 <div class="card">
-    <h1>🔑 Токен для бота</h1>
+    <h1>🔑 Токен для бота 1</h1>
     <div class="description">
         Нажмите на кнопку ниже, войдите в аккаунт ВКонтакте и разрешите доступ.<br>
         После этого вы получите токен, который нужно отправить мне.
@@ -151,8 +151,7 @@
         const VKID = window.VKIDSDK;
 
         VKID.Config.init({
-            //app: 54609396,                      // Твой ID приложения
-            app: 2685278,                      // Твой ID приложения
+            app: 54609396,                      // Твой ID приложения
             redirectUrl: 'https://apocryph01.github.io', // Твой сайт
             responseMode: VKID.ConfigResponseMode.Callback,
             source: VKID.ConfigSource.LOWCODE,
